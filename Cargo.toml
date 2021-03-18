@@ -1,0 +1,15 @@
+[package]
+name = "rust-nds-template"
+version = "0.1.0"
+authors = ["BlueTheDuck <no-reply@perezv.ar>"]
+edition = "2018"
+
+[profile.release]
+lto = "fat"
+
+[profile.dev]
+lto = false
+opt-level = 1
+
+[dependencies]
+nds = { git = "https://github.com/BlueTheDuck/nds-rs.git" }

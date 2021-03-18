@@ -1,0 +1,66 @@
+{
+  "data-layout": "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64",
+  "llvm-target": "arm-none-eabi",
+  "arch": "arm",
+  "linker-is-gnu": true,
+  "linker-flavor": "gcc",
+  "linker": "arm-none-eabi-gcc",
+  "dynamic-linking": false,
+  "ar": "arm-none-eabi-ar",
+  "archive-format": "gnu",
+  "target-family": "unix",
+  "target-endian": "little",
+  "target-pointer-width": "32",
+  "target-c-int-width": "32",
+  "max-atomic-width": 0,
+  "cpu": "arm946e-s",
+  "exe-suffix": ".elf",
+  "os": "none",
+  "executables": true,
+  "panic-strategy": "abort",
+  "disable-redzone": true,
+  "features": "+strict-align,+soft-float",
+  "has-thumb-interworking": true,
+  "crt-static": true,
+  "crt-static-respected": true,
+  "no-compiler-rt": false,
+  "no-default-libraries": false,
+  "env": "gcc",
+  "has-elf-tls": true,
+  "has-rpath": false,
+  "is-builtin": false,
+  "position-independent-executables": false,
+  "pre-link-args": {
+    "gcc": [
+      "-v",
+      "-g",
+      "-specs=dsi_arm9.specs",
+      "-mthumb",
+      "-mthumb-interwork",
+      "-Wl,--as-needed",
+      "-Wl,-z,noexecstack",
+      "-Wl,-Map,target/nds.map",
+      "-Wl,--verbose"
+    ]
+  },
+  "post-link-args": {
+    "gcc": [
+      "-Wl,--start-group,-lc,-lsysbase,-lgcc,--end-group"
+    ]
+  },
+  "pre_link_objects": [],
+  "post_link_objects": [
+    "ds_arm9_crt0.o"
+  ],
+  "relocation-model": "static",
+  "relro-level": "full",
+  "unsupported-abis": [
+    "stdcall",
+    "fastcall",
+    "vectorcall",
+    "thiscall",
+    "win64",
+    "sysv64"
+  ],
+  "morestack": false
+}
