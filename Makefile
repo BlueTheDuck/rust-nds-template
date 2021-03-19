@@ -35,6 +35,7 @@ build: $(OUTPUT)/$(NAME).nds
 $(OUTPUT)/$(NAME).nds: $(OUTPUT)/$(NAME).elf
 	@echo "Creating rom ($(PROFILE))"
 	@ndstool -c $@ -9 $< $(NDSTOOLFLAGS)
+	@echo "File on $(OUTPUT)/$(NAME).nds"
 
 $(OUTPUT)/$(NAME).elf: cargo
 
