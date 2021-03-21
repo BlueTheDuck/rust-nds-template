@@ -5,10 +5,11 @@
 extern crate nds;
 
 use nds::{
+    dma,
     input::{KeyState, Keypad},
-    video::{self, VramA},
+    video::{self, vram_a},
 };
-use video::{colors, registers::VRAM_A, set_backdrop_color, WIDTH};
+use video::{colors, registers::VRAM_A, set_backdrop_color, HEIGHT, WIDTH};
 
 static TEXT: [[u8; 50]; 5] = [
     [
@@ -41,9 +42,16 @@ fn main() -> ! {
     // Display directly from VRAM on top screen
     video::set_mode(video::Mode::ModeFb0);
     // Use Bank A (aka VRAM A) as source, mapping the first 192*256*2 bytes of Bank A to pixels on screen
-    VramA::set_bank_mode(VramA::BankMode::Lcd);
+    vram_a::set_bank_mode(vram_a::BankMode::Lcd);
 
-    let colors = [colors::RED, colors::GREEN, colors::BLUE];
+    // Fill the screen with blue using DMA
+    unsafe {
+        dma::fill_half_words(dma::Channel::Ch3, colors::BLUE.0, VRAM_A, WIDTH * HEIGHT);
+    }
+    // Wait until the previous operation completes
+    dma::wait_for(dma::Channel::Ch3);
+
+    let colors = [colors::RED, colors::GREEN];
     let mut color_idx = 0;
     let mut keypad = Keypad::default();
     loop {
@@ -67,6 +75,7 @@ fn main() -> ! {
                 }
             }
         }
+        
         // Ask the ARM7 for the state of the keys
         keypad.scan();
         if keypad.up == KeyState::Down {
@@ -75,6 +84,7 @@ fn main() -> ! {
         } else if keypad.down == KeyState::Down {
             color_idx = core::cmp::min(color_idx.wrapping_sub(1), colors.len() - 1);
         }
+
         // Wait for the next vertical blank
         nds::interrupts::swi_wait_for_v_blank();
     }
