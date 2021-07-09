@@ -12,4 +12,7 @@ lto = false
 opt-level = 1
 
 [dependencies]
-nds = { git = "https://github.com/BlueTheDuck/nds-rs.git" }
+nds = { git = "ssh://git@github.com/BlueTheDuck/nds-rs.git" }
+
+[build-dependencies]
+cc = "1.0"
