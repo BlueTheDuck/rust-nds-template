@@ -6,7 +6,7 @@ endif
 .DEFAULT: build
 
 # Configure here name and runner
-NAME := rust-nds-template
+NAME := $(shell cat Cargo.toml | sed -n -e 's/name = "\([^"]*\)".*/\1/p')
 RUNNER := melonDS
 
 # Configure here flags for cargo and ndstool
@@ -29,12 +29,13 @@ NDSTOOLFLAGS += -vv
 endif
 
 OUTPUT := target/nds/$(PROFILE)
+_ADDFILES := -d nitrofiles
 
 build: $(OUTPUT)/$(NAME).nds
 
 $(OUTPUT)/$(NAME).nds: $(OUTPUT)/$(NAME).elf
-	@echo "Creating rom ($(PROFILE))"
-	@ndstool -c $@ -9 $< $(NDSTOOLFLAGS)
+	@echo "Creating ROM $@ ($(PROFILE))"
+	@ndstool -c $@ -9 $< $(NDSTOOLFLAGS) $(_ADDFILES)
 	@echo "File on $(OUTPUT)/$(NAME).nds"
 
 $(OUTPUT)/$(NAME).elf: cargo
@@ -49,4 +50,13 @@ run: build
 
 clean:
 	@cargo clean
-	@rm -f $(NAME)-*.nds
+	@rm -f $(OUTPUT)/$(NAME).nds
+
+update:
+	@CARGO_NET_GIT_FETCH_WITH_CLI=true cargo update
+
+IMGS = $(shell find src -iname '*.png' -or -iname '*.bmp')
+
+images: $(IMGS)
+	@cd $(shell dirname $<) && \
+	grit $(shell basename $<)

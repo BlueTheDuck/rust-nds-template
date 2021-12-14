@@ -1,11 +1,14 @@
 #![no_std]
 #![no_main]
 
+use core::intrinsics::size_of;
+use core::mem::size_of_val;
+
 use nds::debug::NOCASH;
 use nds::input::{KeyState, Keypad};
 use nds::interrupts::swi_wait_for_v_blank;
 use nds::sys::video;
-use nds::video::api;
+use nds::video::{api, banks};
 
 #[macro_use]
 extern crate nds;
@@ -14,6 +17,9 @@ extern crate alloc;
 const FERRIS_MAP_LEN: usize = 2048;
 const FERRIS_PAL_LEN: usize = 512;
 const FERRIS_TILES_LEN: usize = 14976;
+// These will be provided by the build file
+// The grit file is configured to generate a byte array with the tiles, map and palette of the image
+// and the build file will compile and embed it into the binary
 extern "C" {
     #[link_name = "ferrisTiles"]
     static FERRIS_TILES: [u8; FERRIS_TILES_LEN];
@@ -31,15 +37,21 @@ extern "C" {
 // (although is not recommended), the value will be printed on the NO$GBA debug TTY
 #[entry]
 fn main() -> ! {
-    unsafe {
-        NOCASH.find_debugger();
-    }
-    nds::video::banks::A::Mode::MainBgSlot0.set();
-    nds::video::banks::E::Mode::Lcd.set();
+    // Configure banks
+    banks::A::Mode::MainBgSlot0.set();
+    banks::E::Mode::Lcd.set();
+
+    // Initialize the video subsystem
+    // We want the Main engine to use the second block (block 1)
+    // of VRAM for map data, and the first (block 0) one for the tiles
+    // (these blocks are 64KiB each)
     let mut setting = api::create_main_mode0(1, 0);
+    // Remember to set the backgrounds to visible!!!
     setting.set_visibility(api::BackgroundId::Bg0, true);
+    // The data for background 0 is at the start of the block
     setting.set_bg_offsets(api::BackgroundId::Bg0, 0, 0);
     unsafe {
+        // Tell the engine to use these settings
         setting.commit();
     }
 
@@ -52,7 +64,7 @@ fn main() -> ! {
             nds::dma::Channel::Ch3,
             FERRIS_TILES.as_ptr() as *const u16,
             tiles_ptr,
-            FERRIS_TILES_LEN / 2,
+            FERRIS_TILES_LEN / 2, // Half-words are twice as big as an u8, so we divide by 2 the len
         );
     }
     unsafe {
@@ -61,7 +73,7 @@ fn main() -> ! {
             nds::dma::Channel::Ch3,
             FERRIS_PAL.as_ptr() as *const u16,
             video::BG_PALETTE,
-            FERRIS_PAL_LEN / 2,
+            FERRIS_PAL_LEN / 2, // Half-words are twice as big as an u8, so we divide by 2 the len
         );
     }
 
