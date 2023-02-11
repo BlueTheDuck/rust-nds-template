@@ -55,8 +55,25 @@ clean:
 update:
 	@CARGO_NET_GIT_FETCH_WITH_CLI=true cargo update
 
-IMGS = $(shell find src -iname '*.png' -or -iname '*.bmp')
+#IMGS = $(shell find src -iname '*.png' -or -iname '*.bmp')
+#
+#images: $(IMGS)
+#	@cd $(shell dirname $<) && \
+#	grit $(shell basename $<)
 
-images: $(IMGS)
-	@cd $(shell dirname $<) && \
-	grit $(shell basename $<)
+%_png.s %.png.h: %.png
+	@echo "Converting image $<"
+	@grit $< -o $@
+
+%_png.rs: %.png.h
+	bindgen $< \
+		--rust-target nightly \
+		--use-core \
+		--ctypes-prefix "core::ffi" \
+		-- \
+		--target=arm-none-eabi \
+		-mfloat-abi=soft \
+		-march=armv5te \
+		-mtune=arm946e-s \
+		-DARM9 \
+		>> $@

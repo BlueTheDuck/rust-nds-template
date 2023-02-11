@@ -12,7 +12,8 @@ lto = false
 opt-level = 1
 
 [dependencies]
-nds = { git = "https://github.com/BlueTheDuck/nds-rs.git" }
+# nds = { git = "https://github.com/BlueTheDuck/nds-rs.git" }
+nds = { path = "../nds-rs" }
 
 [build-dependencies]
 cc = "1.0"

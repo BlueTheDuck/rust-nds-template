@@ -32,7 +32,6 @@ checksum = "fc7fcc620a3bff7cdd7a365be3376c97191aeaccc2a603e600951e452615bf89"
 [[package]]
 name = "nds"
 version = "0.1.0"
-source = "git+https://github.com/BlueTheDuck/nds-rs.git#4ac4f289bcb7498409e6e4bc8ff3de402223a0f9"
 dependencies = [
  "bitflags",
  "lazy_static",
@@ -45,7 +44,6 @@ dependencies = [
 [[package]]
 name = "nds-proc-macros"
 version = "0.1.0"
-source = "git+https://github.com/BlueTheDuck/nds-rs.git#4ac4f289bcb7498409e6e4bc8ff3de402223a0f9"
 dependencies = [
  "quote",
  "syn",
@@ -54,7 +52,6 @@ dependencies = [
 [[package]]
 name = "nds-sys"
 version = "0.1.0"
-source = "git+https://github.com/BlueTheDuck/nds-rs.git#4ac4f289bcb7498409e6e4bc8ff3de402223a0f9"
 dependencies = [
  "bitflags",
  "libc",

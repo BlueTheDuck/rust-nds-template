@@ -13,6 +13,6 @@ fn main() {
     assert!(gcc.exists(), "arm-none-eabi-gcc not found at {:?}", gcc);
     cc::Build::new()
         .compiler("arm-none-eabi-gcc")
-        .file("src/ferris.s")
+        .file("src/ferris.png.s")
         .compile("ferris");
 }

@@ -1,33 +1,36 @@
 #![no_std]
 #![no_main]
 
-use core::intrinsics::size_of;
+use core::mem::size_of;
 use core::mem::size_of_val;
 
 use nds::debug::NOCASH;
 use nds::input::{KeyState, Keypad};
 use nds::interrupts::swi_wait_for_v_blank;
 use nds::sys::video;
+use nds::video::api::TextTileData;
 use nds::video::{api, banks};
 
 #[macro_use]
 extern crate nds;
 extern crate alloc;
 
-const FERRIS_MAP_LEN: usize = 2048;
-const FERRIS_PAL_LEN: usize = 512;
+// Use bindgen to generate the correct information (len, link names, etc.)
+// then copy it by hand on your project
 const FERRIS_TILES_LEN: usize = 14976;
+const FERRIS_MAP_LEN: usize = 2048 / size_of::<TextTileData>();
+const FERRIS_PAL_LEN: usize = 512;
 // These will be provided by the build file
 // The grit file is configured to generate a byte array with the tiles, map and palette of the image
 // and the build file will compile and embed it into the binary
 extern "C" {
-    #[link_name = "ferrisTiles"]
+    #[link_name = "ferris_pngTiles"]
     static FERRIS_TILES: [u8; FERRIS_TILES_LEN];
 
-    #[link_name = "ferrisMap"]
-    static FERRIS_MAP: [api::TextBGMapData; FERRIS_MAP_LEN / 2];
+    #[link_name = "ferris_pngMap"]
+    static FERRIS_MAP: [TextTileData; FERRIS_MAP_LEN];
 
-    #[link_name = "ferrisPal"]
+    #[link_name = "ferris_pngPal"]
     static FERRIS_PAL: [u8; FERRIS_PAL_LEN];
 
 }
@@ -38,8 +41,10 @@ extern "C" {
 #[entry]
 fn main() -> ! {
     // Configure banks
-    banks::A::Mode::MainBgSlot0.set();
-    banks::E::Mode::Lcd.set();
+    unsafe {
+        banks::A::Mode::MainBgSlot0.set();
+        banks::E::Mode::Lcd.set();
+    }
 
     // Initialize the video subsystem
     // We want the Main engine to use the second block (block 1)
@@ -64,7 +69,7 @@ fn main() -> ! {
             nds::dma::Channel::Ch3,
             FERRIS_TILES.as_ptr() as *const u16,
             tiles_ptr,
-            FERRIS_TILES_LEN / 2, // Half-words are twice as big as an u8, so we divide by 2 the len
+            FERRIS_TILES_LEN / size_of::<u16>(), // Half-words are twice as big as an u8, so we divide by 2 the len
         );
     }
     unsafe {
@@ -73,7 +78,7 @@ fn main() -> ! {
             nds::dma::Channel::Ch3,
             FERRIS_PAL.as_ptr() as *const u16,
             video::BG_PALETTE,
-            FERRIS_PAL_LEN / 2, // Half-words are twice as big as an u8, so we divide by 2 the len
+            FERRIS_PAL_LEN / size_of::<u16>(), // Half-words are twice as big as an u8, so we divide by 2 the len
         );
     }
 
@@ -99,11 +104,11 @@ fn main() -> ! {
             offset = offset.wrapping_add(0x40);
             println!("{:02X}", offset);
         } else if keypad.a == KeyState::Down {
-            let id = map[offset].get_tile_id().wrapping_add(1);
-            map[offset].set_tile_id(id);
+            let id = map[offset].tile_index().wrapping_add(1);
+            map[offset].set_tile_index(id);
         } else if keypad.b == KeyState::Down {
-            let id = map[offset].get_tile_id().wrapping_sub(1);
-            map[offset].set_tile_id(id);
+            let id = map[offset].tile_index().wrapping_sub(1);
+            map[offset].set_tile_index(id);
         }
         offset &= map.len();
         swi_wait_for_v_blank();
