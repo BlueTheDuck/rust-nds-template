@@ -2,7 +2,7 @@
 name = "rust-nds-template"
 version = "0.0.1"
 authors = ["Your Name Here <no-reply@example.com>"]
-edition = "2018"
+edition = "2021"
 
 [profile.release]
 lto = "fat"
@@ -12,8 +12,7 @@ lto = false
 opt-level = 1
 
 [dependencies]
-# nds = { git = "https://github.com/BlueTheDuck/nds-rs.git" }
-nds = { path = "../nds-rs" }
+nds = { git = "https://github.com/BlueTheDuck/nds-rs.git" }
 
 [build-dependencies]
 cc = "1.0"

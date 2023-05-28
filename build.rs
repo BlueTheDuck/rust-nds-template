@@ -1,4 +1,4 @@
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let devkitarm = match std::env::var("DEVKITARM") {
         Ok(v) => v,
         Err(_) => {
@@ -11,8 +11,8 @@ fn main() {
     let devkitarm = std::path::PathBuf::from(devkitarm);
     let gcc = devkitarm.join("bin/arm-none-eabi-gcc");
     assert!(gcc.exists(), "arm-none-eabi-gcc not found at {:?}", gcc);
-    cc::Build::new()
-        .compiler("arm-none-eabi-gcc")
-        .file("src/ferris.png.s")
-        .compile("ferris");
+
+    println!("cargo:rerun-if-changed=assets");
+
+    Ok(())
 }

@@ -1,0 +1,12 @@
+# No need to include the commented out options,
+# we are already setting them in the Makefile
+-W3   # Full warnings
+# -g    # Include graphic data
+-gu16 # Data type: u16
+# -gb   # Bitmap
+-gB16 # 16 bits per pixel
+-gT!  # NO transparency
+# -m!   # NO map
+# -p!   # NO palette
+# -ftb  # File type: binary
+# -fh!  # NO C header file
