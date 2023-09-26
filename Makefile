@@ -28,17 +28,17 @@ CARGOFLAGS += --verbose
 NDSTOOLFLAGS += -vv
 endif
 
-OUTPUT := target/nds/$(PROFILE)
+OUTPUT := target/armv5te-none-eabi/$(PROFILE)
 _ADDFILES := -d nitrofiles
 
 build: $(OUTPUT)/$(NAME).nds
 
-$(OUTPUT)/$(NAME).nds: $(OUTPUT)/$(NAME).elf
+$(OUTPUT)/$(NAME).nds: $(OUTPUT)/$(NAME)
 	@echo "Creating ROM $@ ($(PROFILE))"
 	@ndstool -c $@ -9 $< $(NDSTOOLFLAGS) $(_ADDFILES)
 	@echo "File on $(OUTPUT)/$(NAME).nds"
 
-$(OUTPUT)/$(NAME).elf: cargo
+$(OUTPUT)/$(NAME): cargo
 
 cargo:
 	@echo "Compiling code ($(PROFILE))"
