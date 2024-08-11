@@ -6,18 +6,18 @@ build-std = ["core", "compiler_builtins", "alloc"]
 build-std-features = ["compiler-builtins-mem"]
 
 [target.armv5te-none-eabi]
-runner = "melonDS"
+# runner = "melonDS"
 rustflags = [
-    # "--cfg", "portable_atomic_unsafe_assume_single_core",
-    "-Clink-arg=-specs=ds_arm9.specs",
-    "-Ctarget-cpu=arm946e-s",
-    
-    # link sysbase and the C library
-    "-Clink-args=-Wl,--start-group -lsysbase -lc -Wl,--end-group",
+      "--cfg", "portable_atomic_no_outline_atomics",
 
-    # Some debugging flags
-    "-Clink-arg=-Wl,-Map=target/nds.map",
-    # "-Clink-arg=-Wl,--verbose",
-    # "--print", "link-args"
+      "-Ctarget-cpu=arm946e-s", "-Csoft-float=yes",
+
+      "-Clink-args=-Wl,--start-group -lc -lgcc -Wl,--end-group",
+      "-Clink-arg=-specs=/opt/wonderful/thirdparty/blocksds/core/sys/crts/ds_arm9.specs",
+
+      # # Some debugging flags
+      # "-Clink-arg=-Wl,-Map=target/nds.map",
+      # "-Clink-arg=-Wl,--verbose",
+      # "--print", "link-args"
 ]
 linker = "arm-none-eabi-gcc"
