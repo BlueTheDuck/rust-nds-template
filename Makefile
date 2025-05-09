@@ -1,9 +1,8 @@
-ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
-endif
-
 .PHONY: build clean cargo assets
 .DEFAULT: build
+
+# Tools
+NDSTOOL ?= $(WONDERFUL_TOOLCHAIN)/thirdparty/blocksds/core/tools/ndstool/ndstool
 
 # Configure here name and runner
 NAME := $(shell cat Cargo.toml | sed -n -e 's/name = "\([^"]*\)".*/\1/p')
@@ -35,8 +34,8 @@ build: $(OUTPUT)/$(NAME).nds
 
 $(OUTPUT)/$(NAME).nds: $(OUTPUT)/$(NAME)
 	@echo "Creating ROM $@ ($(PROFILE))"
-	@ndstool -c $@ -9 $< $(NDSTOOLFLAGS) $(_ADDFILES)
-	@echo "File on $(OUTPUT)/$(NAME).nds"
+	@$(NDSTOOL) -c $@ -9 $< $(NDSTOOLFLAGS) $(_ADDFILES)
+	@echo "File on $@"
 
 $(OUTPUT)/$(NAME): cargo
 
