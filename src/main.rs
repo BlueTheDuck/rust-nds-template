@@ -13,6 +13,7 @@ use embedded_graphics::{
 use nds_rs::{
     background::{BitmapLayer, MainGraphicsModeSettings, SubGraphicsModeSettings},
     interrupts::swi_wait_for_v_blank,
+    nds_proc_macros::entry,
     system::Screen,
     Hw,
 };
@@ -25,16 +26,11 @@ extern "C" {
     pub fn vramSetPrimaryBanks(a: u32, b: u32, c: u32, d: u32) -> u32;
 }
 
-#[macro_use]
-extern crate nds_proc_macros;
-extern crate nds_rt;
-
 static FERRIS: ImageRaw<'static, Bgr555, LittleEndian> =
     ImageRaw::new(include_bytes!("../assets/ferris.img.bin"), 256);
 
 // The entry point must be defined with #[entry]
-// It can actually return anything that `impl Debug`, and in case it returns
-// (although is not recommended), the value will be printed on the NO$GBA debug TTY
+// It can either return an int or loop forever
 #[entry]
 pub fn main(mut hw: Hw) -> ! {
     if nds_rs::debug::log_to_nocash() {
