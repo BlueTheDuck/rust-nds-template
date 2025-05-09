@@ -12,7 +12,12 @@ lto = false
 opt-level = 1
 
 [dependencies]
-nds = { git = "https://github.com/BlueTheDuck/nds-rs.git" }
+nds-rt = { path = "../nds-rs/nds-rt" }
+nds-rs = { path = "../nds-rs/nds-rs", default-features = true }
+nds-proc-macros = { path = "../nds-rs/nds-proc-macros" }
+embedded-graphics = "0.8.1"
+embedded-canvas = { version = "0.3.1", default-features = false, features = ["alloc"] }
+
 
 [build-dependencies]
 cc = "1.0"

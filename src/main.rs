@@ -1,54 +1,105 @@
 #![no_std]
 #![no_main]
 
-use core::slice::from_raw_parts_mut;
+use embedded_canvas::Canvas;
+use embedded_graphics::{
+    image::{Image, ImageRaw},
+    mono_font::{iso_8859_10::FONT_10X20, MonoTextStyle},
+    pixelcolor::{raw::LittleEndian, Bgr555},
+    prelude::*,
+    primitives::Rectangle,
+    text::Text,
+};
+use nds_rs::{
+    background::{BitmapLayer, MainGraphicsModeSettings, SubGraphicsModeSettings},
+    interrupts::swi_wait_for_v_blank,
+    system::Screen,
+    Hw,
+};
+use nds_rs::{
+    background::{GraphicsMode, RenderTargetBitmap},
+    println,
+};
 
-use nds::background::Layer;
-use nds::dma::{self, Channel};
-use nds::interrupts::swi_wait_for_v_blank;
-use nds::sys::video::{enable_main_background, BG_GFX};
-use nds::video::background::{background_init, BitmapLayerSize, DirectBitmapLayer, Mode};
-use nds::video::banks;
+extern "C" {
+    pub fn vramSetPrimaryBanks(a: u32, b: u32, c: u32, d: u32) -> u32;
+}
 
 #[macro_use]
-extern crate nds;
-extern crate alloc;
+extern crate nds_proc_macros;
+extern crate nds_rt;
 
-static FERRIS_IMAGE: &'static [u16] = &include_bytes_as!(u16, "../assets/ferris.img.bin");
+static FERRIS: ImageRaw<'static, Bgr555, LittleEndian> =
+    ImageRaw::new(include_bytes!("../assets/ferris.img.bin"), 256);
 
 // The entry point must be defined with #[entry]
 // It can actually return anything that `impl Debug`, and in case it returns
 // (although is not recommended), the value will be printed on the NO$GBA debug TTY
 #[entry]
-fn main() -> ! {
-    // Configure banks
-    unsafe {
-        banks::A::Mode::MainBgSlot0.set();
-        banks::B::Mode::MainBgSlot1.set();
+pub fn main(mut hw: Hw) -> ! {
+    if nds_rs::debug::log_to_nocash() {
+        println!("Logged to NO$GBA");
+        println!("PC = %pc%");
     }
 
-    println!("Banks configured");
+    // Enable graphic 2D engines A and B, doesn't include 3D
+    hw.system.enable_engines(Some(true), Some(true));
+    hw.system.main_engine_on(Screen::Top);
+    unsafe {
+        // Safety
 
-    background_init(Mode::Mode5 {
-        layer0: None,
-        layer1: None,
-        layer2: None,
-        layer3: Some(DirectBitmapLayer::new(BitmapLayerSize::Medium, 0).unwrap()),
-    });
+        // When running in real hardware, turning on or off the LCD may damage the LCD circuitry depending on when the setting is changed.
 
-    println!("Backgrounds configured");
+        // Call this function only once at the start of the program.
+        hw.system.enable_lcd(true);
+    }
+    unsafe {
+        // No safe wrappers yet :(
+        vramSetPrimaryBanks(1, 0, 4, 0);
+    }
 
-    let bitmap: &'static mut [u16] = unsafe { from_raw_parts_mut(BG_GFX, 256 * 256) };
+    let video_mode = GraphicsMode {
+        layer3: BitmapLayer::new_big(),
+        layer2: BitmapLayer::new_fullscreen(),
+        mode_settings: MainGraphicsModeSettings::new((false, false, false, true), 0, 0),
+    };
+    let video_mode_sub = GraphicsMode {
+        layer2: BitmapLayer::new_big(),
+        layer3: BitmapLayer::new_fullscreen(),
+        mode_settings: SubGraphicsModeSettings::new((false, false, false, true)),
+    };
+    let mut fb = video_mode.layer3_framebuffer();
+    let mut fb_sub = video_mode_sub.layer3_framebuffer();
+    hw.video.set_graphics_mode(video_mode);
+    hw.video.set_sub_graphics_mode(video_mode_sub);
 
-    println!("Filling with white");
-    dma::fill(0b1_11111_11111_11111u16, bitmap);
-    dma::wait_for(Channel::Ch3);
-    println!("Writing bitmap");
-    dma::copy(FERRIS_IMAGE, bitmap);
-    dma::wait_for(Channel::Ch3);
-    println!("Bitmap written");
+    let span = Rectangle::new(Point::zero(), fb.size());
+    println!("screen size {}", fb.size());
+    println!("screen size {}", fb_sub.size());
 
-    enable_main_background(Layer::Layer3, true);
+    // We can either draw on the framebuffer itself...
+    swi_wait_for_v_blank();
+    fb.fill_solid(&span, Bgr555::GREEN).unwrap();
+    swi_wait_for_v_blank();
+    fb_sub.fill_solid(&span, Bgr555::BLUE).unwrap();
+
+    println!("Finished painting");
+    let style = MonoTextStyle::new(&FONT_10X20, Bgr555::WHITE);
+
+    // ... or on a canvas!
+    let mut canvas: Canvas<<RenderTargetBitmap as DrawTarget>::Color> = Canvas::new(fb.size());
+    Image::new(&FERRIS, Point::new(0, -50))
+        .draw(&mut canvas)
+        .unwrap();
+    Text::new("hello rust!", Point::new(10, 96), style)
+        .draw(&mut canvas)
+        .unwrap();
+
+    swi_wait_for_v_blank();
+    canvas.place_at(Point::zero()).draw(&mut fb).unwrap();
+    fb.flush_cache();
+    swi_wait_for_v_blank();
+    fb.flush_cache();
 
     loop {
         swi_wait_for_v_blank();
