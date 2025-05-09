@@ -1,19 +1,14 @@
 [build]
-target = "armv5te-none-eabi"
+target = ".cargo/armv5te-nintendo-ds-newlibeabi.json"
 
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]
 build-std-features = ["compiler-builtins-mem"]
 
-[target.armv5te-none-eabi]
+[target.armv5te-nintendo-ds-newlibeabi]
 # runner = "melonDS"
 rustflags = [
       "--cfg", "portable_atomic_no_outline_atomics",
-
-      "-Ctarget-cpu=arm946e-s", "-Csoft-float=yes",
-
-      "-Clink-args=-Wl,--start-group -lc -lgcc -Wl,--end-group",
-      "-Clink-arg=-specs=/opt/wonderful/thirdparty/blocksds/core/sys/crts/ds_arm9.specs",
 
       # # Some debugging flags
       # "-Clink-arg=-Wl,-Map=target/nds.map",

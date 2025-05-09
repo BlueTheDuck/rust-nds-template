@@ -12,9 +12,11 @@ RUNNER := melonDS
 CARGOFLAGS :=
 NDSTOOLFLAGS :=
 
+DEBUG ?= 1
+
 # Profile selection
 # Use "make DEBUG=1" for debug
-ifdef DEBUG
+ifeq ($(DEBUG),1)
 PROFILE := debug
 else
 PROFILE := release
@@ -27,19 +29,20 @@ CARGOFLAGS += --verbose
 NDSTOOLFLAGS += -vv
 endif
 
-OUTPUT := target/armv5te-none-eabi/$(PROFILE)
+
+TARGET = armv5te-nintendo-ds-newlibeabi
+
+OUTPUT := target/$(TARGET)/$(PROFILE)
 _ADDFILES := -d nitrofiles
 
-build: $(OUTPUT)/$(NAME).nds
+build: $(NAME)-$(PROFILE).nds
 
-$(OUTPUT)/$(NAME).nds: $(OUTPUT)/$(NAME)
+$(NAME)-$(PROFILE).nds: $(OUTPUT)/$(NAME).elf
 	@echo "Creating ROM $@ ($(PROFILE))"
 	@$(NDSTOOL) -c $@ -9 $< $(NDSTOOLFLAGS) $(_ADDFILES)
 	@echo "File on $@"
 
-$(OUTPUT)/$(NAME): cargo
-
-cargo:
+$(OUTPUT)/$(NAME).elf: $(shell find src -name '*.rs')
 	@echo "Compiling code ($(PROFILE))"
 	@cargo build $(CARGOFLAGS)
 
